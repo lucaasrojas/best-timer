@@ -8,8 +8,7 @@ function App() {
   return (
     <HashRouter>
       <Switch>
-        <Route exact path="/" component={Welcome} />
-        <Route exact path="/timer/:time" component={Timer} />
+        <Route exact path="/:time" component={Timer} />
       </Switch>
     </HashRouter>
   );
