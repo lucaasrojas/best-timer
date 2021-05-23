@@ -6,7 +6,9 @@ const CONSTANTS = {
     MIN: "min",
     SEC: "sec",
     TEXT_PRIMARY_COLOR: "#d0d0d0",
-    TEXT_SECONDARY_COLOR: "#686868"
+    TEXT_SECONDARY_COLOR: "#686868",
+    MIN_STEP: 5,
+    SEC_STEP: 5
 }
 
 const Timer = (props) => {
@@ -26,31 +28,31 @@ const Timer = (props) => {
             setProgressPercentage(0)
         },
         "ArrowUp": () => {
-            if (editSelected === "sec" && (time.sec + 5) < 59) {
-                setInitialTime(prevTime => ({ ...prevTime, sec: prevTime.sec + 5 }))
-                setTime(prevTime => ({ ...prevTime, sec: prevTime.sec + 5 }))
-            } else if (editSelected === "min" && (time.min + 5) < 59) {
-                setInitialTime(prevTime => ({ ...prevTime, min: prevTime.min + 5 }))
-                setTime(prevTime => ({ ...prevTime, min: prevTime.min + 5 }))
+            if (editSelected === CONSTANTS.SEC && (time.sec + CONSTANTS.SEC_STEP) < 59) {
+                setInitialTime(prevTime => ({ ...prevTime, sec: prevTime.sec + CONSTANTS.SEC_STEP }))
+                setTime(prevTime => ({ ...prevTime, sec: prevTime.sec + CONSTANTS.SEC_STEP }))
+            } else if (editSelected === CONSTANTS.MIN && (time.min + CONSTANTS.MIN_STEP) < 59) {
+                setInitialTime(prevTime => ({ ...prevTime, min: prevTime.min + CONSTANTS.MIN_STEP }))
+                setTime(prevTime => ({ ...prevTime, min: prevTime.min + CONSTANTS.MIN_STEP }))
             }
         },
         "ArrowDown": () => {
-            if (editSelected === "sec" && (time.sec - 5) > 0) {
-                setInitialTime(prevTime => ({ ...prevTime, sec: prevTime.sec + 5 }))
-                setTime(prevTime => ({ ...prevTime, sec: prevTime.sec - 5 }))
-            } else if (editSelected === "min" && (time.min - 5) > 0) {
-                setInitialTime(prevTime => ({ ...prevTime, min: prevTime.min + 5 }))
-                setTime(prevTime => ({ ...prevTime, min: prevTime.min - 5 }))
+            if (editSelected === CONSTANTS.SEC && (time.sec - CONSTANTS.SEC_STEP) > 0) {
+                setInitialTime(prevTime => ({ ...prevTime, sec: prevTime.sec - CONSTANTS.SEC_STEP }))
+                setTime(prevTime => ({ ...prevTime, sec: prevTime.sec - CONSTANTS.SEC_STEP }))
+            } else if (editSelected === CONSTANTS.MIN && (time.min - CONSTANTS.MIN_STEP) > 0) {
+                setInitialTime(prevTime => ({ ...prevTime, min: prevTime.min - CONSTANTS.MIN_STEP }))
+                setTime(prevTime => ({ ...prevTime, min: prevTime.min - CONSTANTS.MIN_STEP }))
             }
         },
         "ArrowLeft": () => {
-            if (editSelected === "sec") {
-                setEditSelected("min")
+            if (editSelected === CONSTANTS.SEC) {
+                setEditSelected(CONSTANTS.MIN)
             }
         },
         "ArrowRight": () => {
-            if (editSelected === "min") {
-                setEditSelected("sec")
+            if (editSelected === CONSTANTS.MIN) {
+                setEditSelected(CONSTANTS.SEC)
             }
         }
     }
