@@ -1,14 +1,21 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { useEventListener, DEFAULT_KEY } from '../../Utils'
+import styles from './Style'
+
+const CONSTANTS = {
+    MIN: "min",
+    SEC: "sec",
+    TEXT_PRIMARY_COLOR: "#d0d0d0",
+    TEXT_SECONDARY_COLOR: "#686868"
+}
 
 const Timer = (props) => {
-    //console.log("TIMER", props)
     const [time, setTime] = React.useState({ min: 0, sec: 0 })
     const [initialTime, setInitialTime] = React.useState({ min: 0, sec: 0 })
     const [running, setRunning] = React.useState(false)
     const [progressPercentage, setProgressPercentage] = React.useState(0)
-    const [editSelected, setEditSelected] = React.useState("min")
+    const [editSelected, setEditSelected] = React.useState(CONSTANTS.MIN)
     let interval
-
     const KEY_FUNCTIONS = {
         "Space": () => {
             setRunning(!!!running)
@@ -47,39 +54,9 @@ const Timer = (props) => {
             }
         }
     }
-    const DEFAULT_KEY = () => null
-    function useEventListener(eventName, handler, element = window) {
-        // Create a ref that stores handler
-        const savedHandler = useRef();
-        // Update ref.current value if handler changes.
-        // This allows our effect below to always get latest handler ...
-        // ... without us needing to pass it in effect deps array ...
-        // ... and potentially cause effect to re-run every render.
-        useEffect(() => {
-            savedHandler.current = handler;
-        }, [handler]);
-        useEffect(
-            () => {
-                // Make sure element supports addEventListener
-                // On
-                const isSupported = element && element.addEventListener;
-                if (!isSupported) return;
-                // Create event listener that calls handler function stored in ref
-                const eventListener = (event) => savedHandler.current(event);
-                // Add event listener
-                element.addEventListener(eventName, eventListener);
-                // Remove event listener on cleanup
-                return () => {
-                    element.removeEventListener(eventName, eventListener);
-                };
-            },
-            [eventName, element] // Re-run if eventName or element changes
-        );
-    }
     useEventListener("keydown", (key) => {
-        console.log("KEY", key)
-        if(KEY_FUNCTIONS[key.code]) {
-            KEY_FUNCTIONS[key.code]() 
+        if (KEY_FUNCTIONS[key.code]) {
+            KEY_FUNCTIONS[key.code]()
         }
     })
     useEventListener("touchend", (key) => {
@@ -100,7 +77,6 @@ const Timer = (props) => {
     }, [])
 
     React.useEffect(() => {
-        //console.log('TIME CHANGED', time);
         calculatePercentage()
     }, [time])
 
@@ -142,26 +118,8 @@ const Timer = (props) => {
         return response
     }
     return (
-        <div className="App"
-            style={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-                backgroundColor: "#150e56"
-            }}
-        >
-            <div id="help-text"
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    paddingLeft: 10,
-                    fontSize: "1.5vw",
-                    zIndex: 1
-                }}
-            >
+        <div style={styles.container}>
+            <div id="help-text" style={styles.helpText}>
                 <p>Touch screen: Start/Pause Timer</p>
                 <p>Space: Start/Pause Timer</p>
                 <p>R: Reset Timer</p>
@@ -176,29 +134,20 @@ const Timer = (props) => {
                 left: 0,
                 width: `${progressPercentage}%`
             }}></div>
-            <div
-                style={{
-                    fontSize: "10vw",
-                    position: "absolute",
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    marginLeft: "auto",
-                    marginRight: "auto",
-                    inset: "unset"
-                }}
-            >
+            <div style={styles.textContainer}>
                 <span
                     style={{
-                        color: editSelected === "min" && !running ? "#686868" : "#d0d0d0"
+                        color: editSelected === CONSTANTS.MIN && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
                     }}
                 >
                     {time.min.toString().length > 1 ? time.min : `0${time.min}`}
                 </span>
-                <span style={{color: "#faf3f3"}}>
+                <span style={{ color: CONSTANTS.TEXT_PRIMARY_COLOR }}>
                     :
                 </span>
                 <span
                     style={{
-                        color: editSelected === "sec" && !running  ? "#686868" : "#d0d0d0"
+                        color: editSelected === CONSTANTS.SEC && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
                     }}>
 
                     {time.sec.toString().length > 1 ? time.sec : `0${time.sec}`}
