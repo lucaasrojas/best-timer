@@ -18,13 +18,14 @@ const Timer = (props) => {
     const [progressPercentage, setProgressPercentage] = React.useState(0)
     const [editSelected, setEditSelected] = React.useState(CONSTANTS.MIN)
     let interval
+    console.log("REFRESH?",props)
     const KEY_FUNCTIONS = {
         "Space": () => {
             setRunning(!!!running)
         },
         "KeyR": () => {
             setRunning(false)
-            setTime({ min: 0, sec: 0 })
+            setTime(initialTime)
             setProgressPercentage(0)
         },
         "ArrowUp": () => {
@@ -64,19 +65,20 @@ const Timer = (props) => {
     useEventListener("touchend", (key) => {
         KEY_FUNCTIONS["Space"]() || DEFAULT_KEY()
     })
+    const setTimer = () => {
+        const timeFromPath = getTimeFromPath()
+        if (((timeFromPath.min > 0 || timeFromPath.sec > 0) && (time.sec === 0 && time.min === 0)) || (time.sec !== timeFromPath.sec || time.min !== timeFromPath.min)) {
+            setInitialTime(timeFromPath)
+            setTime(timeFromPath)
+        }
+    }
+
     const calculatePercentage = () => {
         const { min, sec } = time
         const timeInSec = (min * 60) + sec
         const initialTimeInSec = (initialTime.min * 60) + initialTime.sec
         setProgressPercentage((timeInSec * 100) / initialTimeInSec)
     }
-    React.useEffect(() => {
-        const timeFromPath = getTimeFromPath()
-        if (timeFromPath.min > 0 || timeFromPath.sec > 0) {
-            setInitialTime(timeFromPath)
-            setTime(timeFromPath)
-        }
-    }, [])
 
     React.useEffect(() => {
         calculatePercentage()
@@ -119,6 +121,8 @@ const Timer = (props) => {
 
         return response
     }
+    setTimer()
+
     return (
         <div style={styles.container}>
             <div id="help-text" style={styles.helpText}>
