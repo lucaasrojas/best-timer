@@ -18,7 +18,7 @@ const Timer = (props) => {
     const [progressPercentage, setProgressPercentage] = React.useState(0)
     const [editSelected, setEditSelected] = React.useState(CONSTANTS.MIN)
     let interval
-    console.log("REFRESH?",props)
+
     const KEY_FUNCTIONS = {
         "Space": () => {
             setRunning(!!!running)
@@ -81,6 +81,10 @@ const Timer = (props) => {
     }
 
     React.useEffect(() => {
+        setTimer()
+    }, [])
+
+    React.useEffect(() => {
         calculatePercentage()
     }, [time])
 
@@ -115,13 +119,13 @@ const Timer = (props) => {
             if (pathname.trim()) {
                 pathname = pathname.replace("minutes", '.').replace("seconds", "").replace("minute", '.').replace("second", "").replace("min", '.').replace("sec", "")
                 const [min, sec] = pathname.split(".")
-                response = { min: parseInt(min), sec: parseInt(sec) }
+                response = { min: parseInt(min) || 0, sec: parseInt(sec) || 0 }
             }
         }
 
         return response
     }
-    setTimer()
+
 
     return (
         <div style={styles.container}>
