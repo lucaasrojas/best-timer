@@ -2,7 +2,7 @@
   "name": "best-timer",
   "version": "0.1.0",
   "private": true,
-  "homepage": "http://lucaasrojas.github.io/timer",
+  "homepage": "http://lucaasrojas.github.io/best-timer",
   "dependencies": {
     "@testing-library/jest-dom": "^5.12.0",
     "@testing-library/react": "^11.2.7",

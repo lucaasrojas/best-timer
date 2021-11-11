@@ -7,13 +7,13 @@ const CONSTANTS = {
     SEC: "sec",
     TEXT_PRIMARY_COLOR: "#d0d0d0",
     TEXT_SECONDARY_COLOR: "#686868",
-    MIN_STEP: 5,
+    MIN_STEP: 1,
     SEC_STEP: 5
 }
+let roundTime = (number) => Math.ceil(number / 5) * 5
 
 const Timer = (props) => {
-    const [time, setTime] = React.useState({ min: 0, sec: 0 })
-    const [initialTime, setInitialTime] = React.useState({ min: 0, sec: 0 })
+    const [time, setTime] = React.useState({ current: { min: 0, sec: 0 }, initial: { min: 0, sec: 0 } })
     const [running, setRunning] = React.useState(false)
     const [progressPercentage, setProgressPercentage] = React.useState(0)
     const [editSelected, setEditSelected] = React.useState(CONSTANTS.MIN)
@@ -25,25 +25,36 @@ const Timer = (props) => {
         },
         "KeyR": () => {
             setRunning(false)
-            setTime(initialTime)
-            setProgressPercentage(0)
+            setTimer()
         },
         "ArrowUp": () => {
-            if (editSelected === CONSTANTS.SEC && (time.sec + CONSTANTS.SEC_STEP) < 59) {
-                setInitialTime(prevTime => ({ ...prevTime, sec: prevTime.sec + CONSTANTS.SEC_STEP }))
-                setTime(prevTime => ({ ...prevTime, sec: prevTime.sec + CONSTANTS.SEC_STEP }))
-            } else if (editSelected === CONSTANTS.MIN && (time.min + CONSTANTS.MIN_STEP) < 59) {
-                setInitialTime(prevTime => ({ ...prevTime, min: prevTime.min + CONSTANTS.MIN_STEP }))
-                setTime(prevTime => ({ ...prevTime, min: prevTime.min + CONSTANTS.MIN_STEP }))
+            if (editSelected === CONSTANTS.SEC && (time.current.sec + CONSTANTS.SEC_STEP) < 59) {
+                setTime(prevTime => ({
+                    ...prevTime,
+                    current: { ...prevTime.current, sec: roundTime(prevTime.current.sec) + CONSTANTS.SEC_STEP },
+                    initial: {...prevTime.initial, sec: roundTime(prevTime.initial.sec) + CONSTANTS.SEC_STEP}
+                }))
+            } else if (editSelected === CONSTANTS.MIN && (time.current.min + CONSTANTS.MIN_STEP) < 59) {
+                setTime(prevTime => ({
+                    ...prevTime,
+                    current: { ...prevTime.current, min: roundTime(prevTime.current.min) + CONSTANTS.MIN_STEP },
+                    initial: {...prevTime.initial, min: roundTime(prevTime.initial.min) + CONSTANTS.MIN_STEP}
+                }))
             }
         },
         "ArrowDown": () => {
-            if (editSelected === CONSTANTS.SEC && (time.sec - CONSTANTS.SEC_STEP) > 0) {
-                setInitialTime(prevTime => ({ ...prevTime, sec: prevTime.sec - CONSTANTS.SEC_STEP }))
-                setTime(prevTime => ({ ...prevTime, sec: prevTime.sec - CONSTANTS.SEC_STEP }))
-            } else if (editSelected === CONSTANTS.MIN && (time.min - CONSTANTS.MIN_STEP) > 0) {
-                setInitialTime(prevTime => ({ ...prevTime, min: prevTime.min - CONSTANTS.MIN_STEP }))
-                setTime(prevTime => ({ ...prevTime, min: prevTime.min - CONSTANTS.MIN_STEP }))
+            if (editSelected === CONSTANTS.SEC && (time.current.sec - CONSTANTS.SEC_STEP) >= 0) {
+                setTime(prevTime => ({
+                    ...prevTime,
+                    current: { ...prevTime.current, sec: roundTime(prevTime.current.sec) - CONSTANTS.SEC_STEP },
+                    initial: {...prevTime.initial, sec: roundTime(prevTime.initial.sec) - CONSTANTS.SEC_STEP}
+                }))
+            } else if (editSelected === CONSTANTS.MIN && (time.current.min - CONSTANTS.MIN_STEP) >= 0) {
+                setTime(prevTime => ({
+                    ...prevTime,
+                    current: { ...prevTime.current, min: roundTime(prevTime.current.min) - CONSTANTS.MIN_STEP },
+                    initial: {...prevTime.initial, min: roundTime(prevTime.initial.min) - CONSTANTS.MIN_STEP}
+                }))
             }
         },
         "ArrowLeft": () => {
@@ -67,16 +78,20 @@ const Timer = (props) => {
     })
     const setTimer = () => {
         const timeFromPath = getTimeFromPath()
-        if (((timeFromPath.min > 0 || timeFromPath.sec > 0) && (time.sec === 0 && time.min === 0)) || (time.sec !== timeFromPath.sec || time.min !== timeFromPath.min)) {
-            setInitialTime(timeFromPath)
-            setTime(timeFromPath)
+        if (((timeFromPath.min > 0 || timeFromPath.sec > 0) && (time.current.sec === 0 && time.current.min === 0)) || (time.current.sec !== timeFromPath.sec || time.current.min !== timeFromPath.min)) {
+            setTime(prevTime => ({
+                ...prevTime,
+                current: { ...prevTime.current, ...timeFromPath },
+                initial: {...prevTime.initial, ...timeFromPath}
+            }))
+            setProgressPercentage(0)
         }
     }
 
     const calculatePercentage = () => {
         const { min, sec } = time
         const timeInSec = (min * 60) + sec
-        const initialTimeInSec = (initialTime.min * 60) + initialTime.sec
+        const initialTimeInSec = (time.initial.min * 60) + time.initial.sec
         setProgressPercentage((timeInSec * 100) / initialTimeInSec)
     }
 
@@ -92,14 +107,14 @@ const Timer = (props) => {
         if (running && !interval) {
             interval = setInterval(() => {
                 setTime(prevTime => {
-                    if (prevTime.sec > 0) {
-                        return { ...prevTime, sec: prevTime.sec - 1 }
-                    } else if (prevTime.sec === 0 && prevTime.min > 0) {
-                        return { min: prevTime.min - 1, sec: 59 }
+                    if (prevTime.current.sec > 0) {
+                        return { ...prevTime, current:{...prevTime.current, sec: prevTime.current.sec - 1 }}
+                    } else if (prevTime.current.sec === 0 && prevTime.current.min > 0) {
+                        return {...prevTime, current:{ min: prevTime.current.min - 1, sec: 59 }}
                     } else {
                         setRunning(false)
                         clearInterval(interval)
-                        return { min: 0, sec: 0 }
+                        return {...prevTime, current:{ min: 0, sec: 0 }}
                     }
                 })
             }, 1000)
@@ -150,7 +165,7 @@ const Timer = (props) => {
                         color: editSelected === CONSTANTS.MIN && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
                     }}
                 >
-                    {time.min.toString().length > 1 ? time.min : `0${time.min}`}
+                    {time.current.min.toString().length > 1 ? time.current.min : `0${time.current.min}`}
                 </span>
                 <span style={{ color: CONSTANTS.TEXT_PRIMARY_COLOR }}>
                     :
@@ -160,7 +175,7 @@ const Timer = (props) => {
                         color: editSelected === CONSTANTS.SEC && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
                     }}>
 
-                    {time.sec.toString().length > 1 ? time.sec : `0${time.sec}`}
+                    {time.current.sec.toString().length > 1 ? time.current.sec : `0${time.current.sec}`}
                 </span>
             </div>
         </div>
