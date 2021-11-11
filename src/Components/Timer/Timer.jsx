@@ -26,6 +26,7 @@ const Timer = (props) => {
         "KeyR": () => {
             setRunning(false)
             setTimer()
+            setProgressPercentage(0)
         },
         "ArrowUp": () => {
             if (editSelected === CONSTANTS.SEC && (time.current.sec + CONSTANTS.SEC_STEP) < 59) {
@@ -37,8 +38,8 @@ const Timer = (props) => {
             } else if (editSelected === CONSTANTS.MIN && (time.current.min + CONSTANTS.MIN_STEP) < 59) {
                 setTime(prevTime => ({
                     ...prevTime,
-                    current: { ...prevTime.current, min: roundTime(prevTime.current.min) + CONSTANTS.MIN_STEP },
-                    initial: {...prevTime.initial, min: roundTime(prevTime.initial.min) + CONSTANTS.MIN_STEP}
+                    current: { ...prevTime.current, min: prevTime.current.min + CONSTANTS.MIN_STEP },
+                    initial: {...prevTime.initial, min: prevTime.initial.min + CONSTANTS.MIN_STEP}
                 }))
             }
         },
@@ -52,8 +53,8 @@ const Timer = (props) => {
             } else if (editSelected === CONSTANTS.MIN && (time.current.min - CONSTANTS.MIN_STEP) >= 0) {
                 setTime(prevTime => ({
                     ...prevTime,
-                    current: { ...prevTime.current, min: roundTime(prevTime.current.min) - CONSTANTS.MIN_STEP },
-                    initial: {...prevTime.initial, min: roundTime(prevTime.initial.min) - CONSTANTS.MIN_STEP}
+                    current: { ...prevTime.current, min: prevTime.current.min - CONSTANTS.MIN_STEP },
+                    initial: {...prevTime.initial, min: prevTime.initial.min - CONSTANTS.MIN_STEP}
                 }))
             }
         },
@@ -84,12 +85,11 @@ const Timer = (props) => {
                 current: { ...prevTime.current, ...timeFromPath },
                 initial: {...prevTime.initial, ...timeFromPath}
             }))
-            setProgressPercentage(0)
         }
     }
 
     const calculatePercentage = () => {
-        const { min, sec } = time
+        const { min, sec } = time.current
         const timeInSec = (min * 60) + sec
         const initialTimeInSec = (time.initial.min * 60) + time.initial.sec
         setProgressPercentage((timeInSec * 100) / initialTimeInSec)
