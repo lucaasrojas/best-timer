@@ -80,7 +80,7 @@ const Timer = (props) => {
   })
   const setTimer = () => {
     const timeFromPath = getTimeFromPath()
-    if (((timeFromPath.min > 0 || timeFromPath.sec > 0) && (time.current.sec === 0 && time.current.min === 0)) || (time.current.sec !== timeFromPath.sec || time.current.min !== timeFromPath.min)) {
+    if (((timeFromPath?.min > 0 || timeFromPath?.sec > 0) && (time.current.sec === 0 && time.current.min === 0)) || (time.current.sec !== timeFromPath?.sec || time.current.min !== timeFromPath?.min)) {
       setTime(prevTime => ({
         ...prevTime,
         current: { ...prevTime.current, ...timeFromPath },
