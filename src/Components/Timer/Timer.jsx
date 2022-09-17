@@ -27,20 +27,20 @@ const Timer = (props) => {
             setRunning(false)
             setTimer()
             setProgressPercentage(0)
-            updateTab(true)
+            updateTab({}, true)
         },
         "ArrowUp": () => {
             if (editSelected === CONSTANTS.SEC && (time.current.sec + CONSTANTS.SEC_STEP) < 59) {
                 setTime(prevTime => ({
                     ...prevTime,
                     current: { ...prevTime.current, sec: roundTime(prevTime.current.sec) + CONSTANTS.SEC_STEP },
-                    initial: {...prevTime.initial, sec: roundTime(prevTime.initial.sec) + CONSTANTS.SEC_STEP}
+                    initial: { ...prevTime.initial, sec: roundTime(prevTime.initial.sec) + CONSTANTS.SEC_STEP }
                 }))
             } else if (editSelected === CONSTANTS.MIN && (time.current.min + CONSTANTS.MIN_STEP) < 59) {
                 setTime(prevTime => ({
                     ...prevTime,
                     current: { ...prevTime.current, min: prevTime.current.min + CONSTANTS.MIN_STEP },
-                    initial: {...prevTime.initial, min: prevTime.initial.min + CONSTANTS.MIN_STEP}
+                    initial: { ...prevTime.initial, min: prevTime.initial.min + CONSTANTS.MIN_STEP }
                 }))
             }
         },
@@ -49,13 +49,13 @@ const Timer = (props) => {
                 setTime(prevTime => ({
                     ...prevTime,
                     current: { ...prevTime.current, sec: roundTime(prevTime.current.sec) - CONSTANTS.SEC_STEP },
-                    initial: {...prevTime.initial, sec: roundTime(prevTime.initial.sec) - CONSTANTS.SEC_STEP}
+                    initial: { ...prevTime.initial, sec: roundTime(prevTime.initial.sec) - CONSTANTS.SEC_STEP }
                 }))
             } else if (editSelected === CONSTANTS.MIN && (time.current.min - CONSTANTS.MIN_STEP) >= 0) {
                 setTime(prevTime => ({
                     ...prevTime,
                     current: { ...prevTime.current, min: prevTime.current.min - CONSTANTS.MIN_STEP },
-                    initial: {...prevTime.initial, min: prevTime.initial.min - CONSTANTS.MIN_STEP}
+                    initial: { ...prevTime.initial, min: prevTime.initial.min - CONSTANTS.MIN_STEP }
                 }))
             }
         },
@@ -84,7 +84,7 @@ const Timer = (props) => {
             setTime(prevTime => ({
                 ...prevTime,
                 current: { ...prevTime.current, ...timeFromPath },
-                initial: {...prevTime.initial, ...timeFromPath}
+                initial: { ...prevTime.initial, ...timeFromPath }
             }))
         }
     }
@@ -95,18 +95,26 @@ const Timer = (props) => {
         const initialTimeInSec = (time.initial.min * 60) + time.initial.sec
         setProgressPercentage((timeInSec * 100) / initialTimeInSec)
     }
-    const updateTab = (restore = false) => {
+    const updateTab = (time, restore = false) => {
+        const timeLabel = generateTimeLabel(time)
+        document.title = restore ? "Best Timer" : `${timeLabel.min}:${timeLabel.sec} - Best Timer`
+    }
 
-        document.title = restore ? "Best Timer" : `${time.current.min}:${time.current.sec} - Best Timer`
+    const generateTimeLabel = (time) => {
+
+        return {
+            min: time.current.min.toString().length > 1 ? time.current.min : `0${time.current.min}`,
+            sec: time.current.sec.toString().length > 1 ? time.current.sec : `0${time.current.sec}`
+        }
     }
     React.useEffect(() => {
         setTimer()
     }, [])
 
     React.useEffect(() => {
-        if(running){
+        if (running) {
             calculatePercentage()
-            updateTab()
+            updateTab(time)
         }
     }, [time, running])
 
@@ -115,13 +123,13 @@ const Timer = (props) => {
             interval = setInterval(() => {
                 setTime(prevTime => {
                     if (prevTime.current.sec > 0) {
-                        return { ...prevTime, current:{...prevTime.current, sec: prevTime.current.sec - 1 }}
+                        return { ...prevTime, current: { ...prevTime.current, sec: prevTime.current.sec - 1 } }
                     } else if (prevTime.current.sec === 0 && prevTime.current.min > 0) {
-                        return {...prevTime, current:{ min: prevTime.current.min - 1, sec: 59 }}
+                        return { ...prevTime, current: { min: prevTime.current.min - 1, sec: 59 } }
                     } else {
                         setRunning(false)
                         clearInterval(interval)
-                        return {...prevTime, current:{ min: 0, sec: 0 }}
+                        return { ...prevTime, current: { min: 0, sec: 0 } }
                     }
                 })
             }, 1000)
@@ -172,7 +180,7 @@ const Timer = (props) => {
                         color: editSelected === CONSTANTS.MIN && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
                     }}
                 >
-                    {time.current.min.toString().length > 1 ? time.current.min : `0${time.current.min}`}
+                    {generateTimeLabel(time).min}
                 </span>
                 <span style={{ color: CONSTANTS.TEXT_PRIMARY_COLOR }}>
                     :
@@ -181,8 +189,8 @@ const Timer = (props) => {
                     style={{
                         color: editSelected === CONSTANTS.SEC && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
                     }}>
+                    {generateTimeLabel(time).sec}
 
-                    {time.current.sec.toString().length > 1 ? time.current.sec : `0${time.current.sec}`}
                 </span>
             </div>
         </div>
