@@ -27,6 +27,7 @@ const Timer = (props) => {
             setRunning(false)
             setTimer()
             setProgressPercentage(0)
+            updateTab(true)
         },
         "ArrowUp": () => {
             if (editSelected === CONSTANTS.SEC && (time.current.sec + CONSTANTS.SEC_STEP) < 59) {
@@ -94,14 +95,20 @@ const Timer = (props) => {
         const initialTimeInSec = (time.initial.min * 60) + time.initial.sec
         setProgressPercentage((timeInSec * 100) / initialTimeInSec)
     }
+    const updateTab = (restore = false) => {
 
+        document.title = restore ? "Best Timer" : `${time.current.min}:${time.current.sec} - Best Timer`
+    }
     React.useEffect(() => {
         setTimer()
     }, [])
 
     React.useEffect(() => {
-        calculatePercentage()
-    }, [time])
+        if(running){
+            calculatePercentage()
+            updateTab()
+        }
+    }, [time, running])
 
     React.useEffect(() => {
         if (running && !interval) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default (eventName, handler, element = window) => {
     // Create a ref that stores handler
