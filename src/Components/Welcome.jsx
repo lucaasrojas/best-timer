@@ -1,11 +1,11 @@
-import React from 'react'
+import React from "react"
 
 const Welcome = () => {
-    return (
-        <div>
+  return (
+    <div>
             Welcome
-        </div>
-    )
+    </div>
+  )
 }
 
 export default Welcome
