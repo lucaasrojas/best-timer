@@ -25,8 +25,8 @@ const Timer = (props) => {
     },
     "KeyR": () => {
       setRunning(false)
-      setTimer()
-      setProgressPercentage(0)
+      setTime(prev => ({ current: prev.initial, initial: prev.initial }))
+      calculatePercentage({...time.initial})
       updateTab({}, true)
     },
     "ArrowUp": () => {
@@ -80,17 +80,18 @@ const Timer = (props) => {
   })
   const setTimer = () => {
     const timeFromPath = getTimeFromPath()
-    if (((timeFromPath?.min > 0 || timeFromPath?.sec > 0) && (time.current.sec === 0 && time.current.min === 0)) || (time.current.sec !== timeFromPath?.sec || time.current.min !== timeFromPath?.min)) {
+    
+    if (((timeFromPath?.min > 0 || timeFromPath?.sec > 0) && (time.current?.sec && time.current?.min)) || (time.current?.sec !== timeFromPath?.sec || time.current?.min !== timeFromPath?.min)) {
       setTime(prevTime => ({
         ...prevTime,
-        current: { ...prevTime.current, ...timeFromPath },
-        initial: { ...prevTime.initial, ...timeFromPath }
+        current: timeFromPath || {min: 0,sec:0},
+        initial: timeFromPath || {min: 0,sec:0}
       }))
     }
   }
 
-  const calculatePercentage = () => {
-    const { min, sec } = time.current
+  const calculatePercentage = (customTime) => {
+    const { min, sec } = customTime || time.current
     const timeInSec = (min * 60) + sec
     const initialTimeInSec = (time.initial.min * 60) + time.initial.sec
     setProgressPercentage((timeInSec * 100) / initialTimeInSec)
@@ -101,10 +102,9 @@ const Timer = (props) => {
   }
 
   const generateTimeLabel = (time) => {
-
     return {
-      min: time.current.min.toString().length > 1 ? time.current.min : `0${time.current.min}`,
-      sec: time.current.sec.toString().length > 1 ? time.current.sec : `0${time.current.sec}`
+      min: time.current?.min.toString().length > 1 ? time.current?.min : `0${time.current?.min}`,
+      sec: time.current?.sec.toString().length > 1 ? time.current?.sec : `0${time.current?.sec}`
     }
   }
   useEffect(() => {
@@ -128,6 +128,7 @@ const Timer = (props) => {
             return { ...prevTime, current: { min: prevTime.current.min - 1, sec: 59 } }
           } else {
             setRunning(false)
+            alert("Time's up!!")
             clearInterval(interval)
             return { ...prevTime, current: { min: 0, sec: 0 } }
           }
@@ -145,10 +146,13 @@ const Timer = (props) => {
     let response = { min: 0, sec: 0 }
     if (props.match.params && props.match.params.time) {
       let pathname = props.match.params.time;
-
+      
       if (pathname.trim()) {
         pathname = pathname.replace("minutes", ".").replace("seconds", "").replace("minute", ".").replace("second", "").replace("min", ".").replace("sec", "")
+        pathname = pathname.split(".")
       }
+
+      response = {min: Number(pathname[0]),sec: Number(pathname[1])}
 
       return response
     }
