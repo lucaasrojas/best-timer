@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useEventListener, DEFAULT_KEY } from "../../Utils"
 import styles from "./Style"
-
+import moment from "moment"
 const CONSTANTS = {
   MIN: "min",
   SEC: "sec",
@@ -13,7 +13,8 @@ const CONSTANTS = {
 let roundTime = (number) => Math.ceil(number / 5) * 5
 
 const Timer = (props) => {
-  const [time, setTime] = useState({ current: { min: 0, sec: 0 }, initial: { min: 0, sec: 0 } })
+  const [currentTime, setCurrentTime] = useState({ min: 0, sec: 0, date: undefined })
+  const [initialTime, setInitialTime] = useState({ min: 0, sec: 0, date: undefined })
   const [running, setRunning] = useState(false)
   const [progressPercentage, setProgressPercentage] = useState(0)
   const [editSelected, setEditSelected] = useState(CONSTANTS.MIN)
@@ -25,40 +26,45 @@ const Timer = (props) => {
     },
     "KeyR": () => {
       setRunning(false)
-      setTime(prev => ({ current: prev.initial, initial: prev.initial }))
-      calculatePercentage({...time.initial})
+      setCurrentTime(initialTime)
+      calculatePercentage(initialTime)
       updateTab({}, true)
     },
-    "ArrowUp": () => {
-      if (editSelected === CONSTANTS.SEC && (time.current.sec + CONSTANTS.SEC_STEP) < 59) {
-        setTime(prevTime => ({
-          ...prevTime,
-          current: { ...prevTime.current, sec: roundTime(prevTime.current.sec) + CONSTANTS.SEC_STEP },
-          initial: { ...prevTime.initial, sec: roundTime(prevTime.initial.sec) + CONSTANTS.SEC_STEP }
-        }))
-      } else if (editSelected === CONSTANTS.MIN && (time.current.min + CONSTANTS.MIN_STEP) < 59) {
-        setTime(prevTime => ({
-          ...prevTime,
-          current: { ...prevTime.current, min: prevTime.current.min + CONSTANTS.MIN_STEP },
-          initial: { ...prevTime.initial, min: prevTime.initial.min + CONSTANTS.MIN_STEP }
-        }))
+    "ArrowUp": useCallback(() => {
+      if (editSelected === CONSTANTS.SEC && (currentTime?.sec + CONSTANTS.SEC_STEP) < 59) {
+        const newTime = {
+          sec: roundTime(currentTime.sec) + CONSTANTS.SEC_STEP,
+          min: currentTime.min
+        }
+        setCurrentTime(newTime)
+        setInitialTime(newTime)
+      } else if (editSelected === CONSTANTS.MIN && (currentTime.min + CONSTANTS.MIN_STEP) < 59) {
+        const newTime = {
+          sec: currentTime.sec,
+          min: currentTime.min + CONSTANTS.MIN_STEP
+        }
+        setCurrentTime(newTime)
+        setInitialTime(newTime)
       }
-    },
-    "ArrowDown": () => {
-      if (editSelected === CONSTANTS.SEC && (time.current.sec - CONSTANTS.SEC_STEP) >= 0) {
-        setTime(prevTime => ({
-          ...prevTime,
-          current: { ...prevTime.current, sec: roundTime(prevTime.current.sec) - CONSTANTS.SEC_STEP },
-          initial: { ...prevTime.initial, sec: roundTime(prevTime.initial.sec) - CONSTANTS.SEC_STEP }
-        }))
-      } else if (editSelected === CONSTANTS.MIN && (time.current.min - CONSTANTS.MIN_STEP) >= 0) {
-        setTime(prevTime => ({
-          ...prevTime,
-          current: { ...prevTime.current, min: prevTime.current.min - CONSTANTS.MIN_STEP },
-          initial: { ...prevTime.initial, min: prevTime.initial.min - CONSTANTS.MIN_STEP }
-        }))
+    },[currentTime, editSelected]),
+    "ArrowDown": useCallback(() => {
+      if (editSelected === CONSTANTS.SEC && (currentTime.sec - CONSTANTS.SEC_STEP) >= 0) {
+        const newTime = {
+          sec: roundTime(currentTime.sec) - CONSTANTS.SEC_STEP,
+          min: currentTime.min
+        }
+        setCurrentTime(newTime)
+        setInitialTime(newTime)
+      } else if (editSelected === CONSTANTS.MIN && (currentTime.min - CONSTANTS.MIN_STEP) >= 0) {
+        const newTime = {
+          sec: currentTime.sec,
+          min: currentTime.min - CONSTANTS.MIN_STEP
+        }
+        setCurrentTime(newTime)
+        setInitialTime(newTime)
       }
-    },
+      setInitialTime(currentTime)
+    },[currentTime, editSelected]),
     "ArrowLeft": () => {
       if (editSelected === CONSTANTS.SEC) {
         setEditSelected(CONSTANTS.MIN)
@@ -80,20 +86,20 @@ const Timer = (props) => {
   })
   const setTimer = () => {
     const timeFromPath = getTimeFromPath()
-    
-    if (((timeFromPath?.min > 0 || timeFromPath?.sec > 0) && (time.current?.sec && time.current?.min)) || (time.current?.sec !== timeFromPath?.sec || time.current?.min !== timeFromPath?.min)) {
-      setTime(prevTime => ({
-        ...prevTime,
-        current: timeFromPath || {min: 0,sec:0},
-        initial: timeFromPath || {min: 0,sec:0}
-      }))
+    if (timeFromPath) {
+      if (timeFromPath?.min > 0 || timeFromPath?.sec > 0) {
+
+        setInitialTime({ ...timeFromPath })
+
+        setCurrentTime(timeFromPath)
+      }
     }
   }
 
   const calculatePercentage = (customTime) => {
-    const { min, sec } = customTime || time.current
+    const { min, sec } = customTime || currentTime
     const timeInSec = (min * 60) + sec
-    const initialTimeInSec = (time.initial.min * 60) + time.initial.sec
+    const initialTimeInSec = (initialTime.min * 60) + initialTime.sec
     setProgressPercentage((timeInSec * 100) / initialTimeInSec)
   }
   const updateTab = (time, restore = false) => {
@@ -103,8 +109,8 @@ const Timer = (props) => {
 
   const generateTimeLabel = (time) => {
     return {
-      min: time.current?.min.toString().length > 1 ? time.current?.min : `0${time.current?.min}`,
-      sec: time.current?.sec.toString().length > 1 ? time.current?.sec : `0${time.current?.sec}`
+      min: time?.min?.toString().length > 1 ? time?.min : `0${time?.min}`,
+      sec: time?.sec?.toString().length > 1 ? time?.sec : `0${time?.sec}`
     }
   }
   useEffect(() => {
@@ -114,25 +120,24 @@ const Timer = (props) => {
   useEffect(() => {
     if (running) {
       calculatePercentage()
-      updateTab(time)
+      updateTab(currentTime)
     }
-  }, [time, running])
+  }, [currentTime, running])
 
   useEffect(() => {
     if (running && !interval) {
+      let targetDate = moment().add(currentTime.min,"m").add(currentTime.sec, "s")
       interval = setInterval(() => {
-        setTime(prevTime => {
-          if (prevTime.current.sec > 0) {
-            return { ...prevTime, current: { ...prevTime.current, sec: prevTime.current.sec - 1 } }
-          } else if (prevTime.current.sec === 0 && prevTime.current.min > 0) {
-            return { ...prevTime, current: { min: prevTime.current.min - 1, sec: 59 } }
-          } else {
-            setRunning(false)
-            alert("Time's up!!")
-            clearInterval(interval)
-            return { ...prevTime, current: { min: 0, sec: 0 } }
-          }
-        })
+        
+        if(targetDate.diff(moment(),"s") >= 0){
+
+          setCurrentTime({
+            min: targetDate.diff(moment(), "minutes"),
+            sec: targetDate.diff(moment(), "seconds") - (targetDate.diff(moment(), "minutes") * 60)
+          })
+        } else {
+          clearInterval(interval)
+        }
       }, 1000)
     }
 
@@ -146,13 +151,13 @@ const Timer = (props) => {
     let response = { min: 0, sec: 0 }
     if (props.match.params && props.match.params.time) {
       let pathname = props.match.params.time;
-      
+
       if (pathname.trim()) {
         pathname = pathname.replace("minutes", ".").replace("seconds", "").replace("minute", ".").replace("second", "").replace("min", ".").replace("sec", "")
         pathname = pathname.split(".")
       }
 
-      response = {min: Number(pathname[0]),sec: Number(pathname[1])}
+      response = { min: Number(pathname[0]), sec: Number(pathname[1]), date: new Date() }
 
       return response
     }
@@ -181,7 +186,7 @@ const Timer = (props) => {
             color: editSelected === CONSTANTS.MIN && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
           }}
         >
-          {generateTimeLabel(time).min}
+          {generateTimeLabel(currentTime).min}
         </span>
         <span style={{ color: CONSTANTS.TEXT_PRIMARY_COLOR }}>
           :
@@ -190,7 +195,7 @@ const Timer = (props) => {
           style={{
             color: editSelected === CONSTANTS.SEC && !running ? CONSTANTS.TEXT_SECONDARY_COLOR : CONSTANTS.TEXT_PRIMARY_COLOR
           }}>
-          {generateTimeLabel(time).sec}
+          {generateTimeLabel(currentTime).sec}
 
         </span>
       </div>
